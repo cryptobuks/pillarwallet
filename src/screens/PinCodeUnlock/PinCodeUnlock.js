@@ -20,6 +20,7 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 import type { NavigationScreenProp } from 'react-navigation';
+import TouchID from 'react-native-touch-id';
 import { DECRYPTING, INVALID_PASSWORD } from 'constants/walletConstants';
 import { FORGOT_PIN } from 'constants/navigationConstants';
 import { loginAction } from 'actions/authActions';
@@ -31,12 +32,19 @@ import ErrorMessage from 'components/ErrorMessage';
 import PinCode from 'components/PinCode';
 
 type Props = {
-  login: (pin: string) => Function,
+  login: (pin: string, touchID?: boolean) => Function,
   wallet: Object,
   navigation: NavigationScreenProp<*>,
 }
 
 class PinCodeUnlock extends React.Component<Props, *> {
+  componentDidMount() {
+    const { login } = this.props;
+    TouchID.authenticate('Authenticate with fingerprint')
+      .then(() => login('', true))
+      .catch(() => null);
+  }
+
   handlePinSubmit = (pin: string) => {
     const { login } = this.props;
     login(pin);
@@ -78,7 +86,7 @@ class PinCodeUnlock extends React.Component<Props, *> {
 const mapStateToProps = ({ wallet }) => ({ wallet });
 
 const mapDispatchToProps = (dispatch: Function) => ({
-  login: (pin: string) => dispatch(loginAction(pin)),
+  login: (pin: string, touchID?: boolean) => dispatch(loginAction(pin, touchID)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(PinCodeUnlock);
