@@ -37,8 +37,10 @@ import HTMLContentModal from 'components/Modals/HTMLContentModal';
 import SystemInfoModal from 'components/SystemInfoModal';
 import Toast from 'components/Toast';
 import CountrySelect from 'components/CountrySelect';
+import CheckPin from 'components/CheckPin';
 import {
   saveBaseFiatCurrencyAction,
+  changeUseBiometricsAction,
   updateAppSettingsAction,
 } from 'actions/appSettingsActions';
 import { updateUserAction } from 'actions/userActions';
@@ -112,6 +114,8 @@ type Props = {
   lockScreen: () => Function,
   logoutUser: () => Function,
   backupStatus: Object,
+  useBiometrics: ?boolean,
+  changeUseBiometrics: (value: boolean) => Function,
 }
 
 type State = {
@@ -119,18 +123,21 @@ type State = {
   showTermsConditionsModal: boolean,
   showPrivacyPolicyModal: boolean,
   showSystemInfoModal: boolean,
+  showCheckPinModal: boolean,
 }
 
 class Profile extends React.Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      visibleModal: null,
-      showTermsConditionsModal: false,
-      showPrivacyPolicyModal: false,
-      showSystemInfoModal: false,
-    };
-  }
+  static defaultProps = {
+    useBiometrics: false,
+  };
+
+  state = {
+    visibleModal: null,
+    showTermsConditionsModal: false,
+    showPrivacyPolicyModal: false,
+    showSystemInfoModal: false,
+    showCheckPinModal: false,
+  };
 
   clearLocalStorage() {
     storage.removeAll();
@@ -148,6 +155,18 @@ class Profile extends React.Component<Props, State> {
 
   togglePrivacyPolicyModal = () => {
     this.setState({ showPrivacyPolicyModal: !this.state.showPrivacyPolicyModal });
+  };
+
+  handleChangeUseBiometrics = (value) => {
+    const { changeUseBiometrics } = this.props;
+    changeUseBiometrics(value);
+    this.setState({ showCheckPinModal: false });
+  };
+
+  handleCheckPinModalClose = () => {
+    const { resetIncorrectPassword } = this.props;
+    resetIncorrectPassword();
+    this.setState({ showCheckPinModal: false });
   };
 
   handleUserFieldUpdate = (field: Object) => {
@@ -207,6 +226,7 @@ class Profile extends React.Component<Props, State> {
       hasDBConflicts,
       repairStorage,
       backupStatus,
+      useBiometrics,
     } = this.props;
 
     const {
@@ -218,6 +238,7 @@ class Profile extends React.Component<Props, State> {
       showTermsConditionsModal,
       showPrivacyPolicyModal,
       showSystemInfoModal,
+      showCheckPinModal,
     } = this.state;
 
     const isWalletBackedUp = isImported || isBackedUp;
@@ -379,6 +400,27 @@ class Profile extends React.Component<Props, State> {
               onPress={() => this.props.navigation.navigate(CHANGE_PIN_FLOW)}
             />
 
+            <ProfileSettingsItem
+              key="useBiometrics"
+              label="Biometric Login"
+              value={useBiometrics}
+              toggle
+              onPress={() => this.setState({ showCheckPinModal: true })}
+            />
+
+            <SlideModal
+              isVisible={showCheckPinModal}
+              onModalHide={this.handleCheckPinModalClose}
+              title="enter pincode"
+              centerTitle
+              fullScreen
+              showHeader
+            >
+              <Wrapper flex={1}>
+                <CheckPin onPinValid={() => this.handleChangeUseBiometrics(!useBiometrics)} />
+              </Wrapper>
+            </SlideModal>
+
             <ListSeparator>
               <SubHeading>APPEARANCE SETTINGS</SubHeading>
             </ListSeparator>
@@ -484,7 +526,7 @@ class Profile extends React.Component<Props, State> {
 
 const mapStateToProps = ({
   user: { data: user },
-  appSettings: { data: { baseFiatCurrency }, data: appSettings },
+  appSettings: { data: { useBiometrics, baseFiatCurrency }, data: appSettings },
   notifications: { intercomNotificationsCount },
   session: { data: { hasDBConflicts } },
   wallet: { backupStatus },
@@ -495,6 +537,7 @@ const mapStateToProps = ({
   appSettings,
   hasDBConflicts,
   backupStatus,
+  useBiometrics,
 });
 
 const mapDispatchToProps = (dispatch: Function) => ({
@@ -506,6 +549,9 @@ const mapDispatchToProps = (dispatch: Function) => ({
   updateAppSettings: (path: string, value: any) => dispatch(updateAppSettingsAction(path, value)),
   lockScreen: () => dispatch(lockScreenAction()),
   logoutUser: () => dispatch(logoutAction()),
+  changeUseBiometrics: (value) => {
+    dispatch(changeUseBiometricsAction(value));
+  },
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Profile);
