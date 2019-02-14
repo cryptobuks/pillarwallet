@@ -23,6 +23,7 @@ import { FlatList, Alert, ScrollView, Keyboard } from 'react-native';
 import styled from 'styled-components/native';
 import type { NavigationScreenProp } from 'react-navigation';
 import Intercom from 'react-native-intercom';
+import TouchID from 'react-native-touch-id';
 import {
   CHANGE_PIN_FLOW,
   REVEAL_BACKUP_PHRASE,
@@ -124,6 +125,7 @@ type State = {
   showPrivacyPolicyModal: boolean,
   showSystemInfoModal: boolean,
   showCheckPinModal: boolean,
+  showBiometricsSelector: boolean,
 }
 
 class Profile extends React.Component<Props, State> {
@@ -137,7 +139,14 @@ class Profile extends React.Component<Props, State> {
     showPrivacyPolicyModal: false,
     showSystemInfoModal: false,
     showCheckPinModal: false,
+    showBiometricsSelector: false,
   };
+
+  componentDidMount() {
+    TouchID.isSupported({})
+      .then(() => this.setState({ showBiometricsSelector: true }))
+      .catch(() => null);
+  }
 
   clearLocalStorage() {
     storage.removeAll();
@@ -239,6 +248,7 @@ class Profile extends React.Component<Props, State> {
       showPrivacyPolicyModal,
       showSystemInfoModal,
       showCheckPinModal,
+      showBiometricsSelector,
     } = this.state;
 
     const isWalletBackedUp = isImported || isBackedUp;
@@ -400,6 +410,7 @@ class Profile extends React.Component<Props, State> {
               onPress={() => this.props.navigation.navigate(CHANGE_PIN_FLOW)}
             />
 
+            {showBiometricsSelector &&
             <ProfileSettingsItem
               key="useBiometrics"
               label="Biometric Login"
@@ -407,6 +418,7 @@ class Profile extends React.Component<Props, State> {
               toggle
               onPress={() => this.setState({ showCheckPinModal: true })}
             />
+            }
 
             <SlideModal
               isVisible={showCheckPinModal}
