@@ -83,7 +83,10 @@ export const loginAction = (pin: string, touchID?: boolean = false) => {
         const { oAuthTokens: { data: OAuthTokensObject } } = getState();
         dispatch(signalInitAction({ ...signalCredentials, ...OAuthTokensObject }));
         const updateOAuth = updateOAuthTokensCB(dispatch, signalCredentials);
-        api.init(wallet.privateKey, updateOAuth, oAuthTokens);
+        // HACK: remove it when the SDK's constructor changes
+        const fakePK = '0x'.concat('0'.repeat(64));
+        const privateKey = (!touchID) ? wallet.privateKey : fakePK;
+        api.init(privateKey, updateOAuth, oAuthTokens);
         api.setUsername(user.username);
         const userInfo = await api.userInfo(user.walletId);
         user = merge({}, user, userInfo);
