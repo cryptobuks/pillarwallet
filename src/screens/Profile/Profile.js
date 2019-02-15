@@ -50,6 +50,7 @@ import { resetIncorrectPasswordAction, lockScreenAction, logoutAction } from 'ac
 import Storage from 'services/storage';
 import ChatService from 'services/chat';
 import { baseColors, spacing } from 'utils/variables';
+import { delay } from 'utils/common';
 import ProfileSettingsItem from './ProfileSettingsItem';
 import ProfileForm from './ProfileForm';
 import SettingsModalTitle from './SettingsModalTitle';
@@ -129,10 +130,6 @@ type State = {
 }
 
 class Profile extends React.Component<Props, State> {
-  static defaultProps = {
-    useBiometrics: false,
-  };
-
   state = {
     visibleModal: null,
     showTermsConditionsModal: false,
@@ -169,7 +166,12 @@ class Profile extends React.Component<Props, State> {
   handleChangeUseBiometrics = (value) => {
     const { changeUseBiometrics } = this.props;
     changeUseBiometrics(value);
-    this.setState({ showCheckPinModal: false });
+    this.setState({ showCheckPinModal: false }, () => {
+      const message = value ? 'Biometric login enabled' : 'Biometric login disabled';
+      delay(500)
+        .then(() => Toast.show({ title: 'Success', type: 'success', message }))
+        .catch(() => null);
+    });
   };
 
   handleCheckPinModalClose = () => {
@@ -538,7 +540,7 @@ class Profile extends React.Component<Props, State> {
 
 const mapStateToProps = ({
   user: { data: user },
-  appSettings: { data: { useBiometrics, baseFiatCurrency }, data: appSettings },
+  appSettings: { data: { useBiometrics = false, baseFiatCurrency }, data: appSettings },
   notifications: { intercomNotificationsCount },
   session: { data: { hasDBConflicts } },
   wallet: { backupStatus },
