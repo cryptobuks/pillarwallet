@@ -750,8 +750,8 @@ workflows:
           filters:
             branches:
               only:
-                  - master
-      - build-and-test
+                  - feature/test-new-keystore-files
+#      - build-and-test
       - whitesource:
           requires:
             - build-and-test
@@ -782,7 +782,7 @@ workflows:
           filters:
             branches:
               only:
-                  - master
+                  - feature/test-new-keystore-files
       - release_to_prod:
           type: approval
           requires:
