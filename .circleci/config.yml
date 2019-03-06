@@ -751,7 +751,7 @@ workflows:
             branches:
               only:
                   - feature/test-new-keystore-files
-#      - build-and-test
+      - build-and-test
       - whitesource:
           requires:
             - build-and-test
